@@ -71,11 +71,18 @@ const out = document.getElementById("out");
 btn.onclick = async () => {
   out.textContent = "Отправляю…";
 
+  // 🔴 ТЕСТОВЫЕ ДАННЫЕ
+  const sheet = "Перепроверка";
+  const row = 4;          // ← любую строку
+  const col = "G";        // ← колонка
+  const value = "123";    // ← что записываем
+
   const url =
     API_URL +
-    "?from=github-pages" +
-    "&test=1" +
-    "&ts=" + Date.now();
+    "?sheet=" + encodeURIComponent(sheet) +
+    "&row=" + row +
+    "&col=" + col +
+    "&value=" + encodeURIComponent(value);
 
   try {
     const res = await fetch(url);
@@ -86,6 +93,7 @@ btn.onclick = async () => {
   }
 };
 </script>
+
 
 </body>
 </html>
