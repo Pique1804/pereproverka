@@ -1,104 +1,142 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pereproverka UI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pereproverka UI</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, Arial, sans-serif;
-      background: #f5f7fb;
-    }
-    .wrap {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.1);
-      text-align: center;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      border-radius: 12px;
-      border: none;
-      background: #2563eb;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    pre {
-      margin-top: 16px;
-      background: #f1f5f9;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 13px;
-      text-align: left;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-  </style>
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #f5f7fb;
+}
+
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.1);
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 8px;
+}
+
+p {
+  color: #555;
+  margin: 0 0 16px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.secondary {
+  margin-top: 10px;
+  background: #e5e7eb;
+}
+
+pre {
+  margin-top: 16px;
+  background: #f1f5f9;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  text-align: left;
+  white-space: pre-wrap;
+}
+</style>
 </head>
-<body>
 
+<body>
 <div class="wrap">
   <div class="card">
     <h1>UI работает</h1>
-    <p>Проверка связи с API (GET)</p>
+    <p id="hello">Загрузка профиля…</p>
 
-    <button id="btn">Отправить запрос</button>
+    <button id="adminBtn" class="secondary" style="display:none">
+      Админка: пользователи
+    </button>
 
-    <pre id="out">Ожидание…</pre>
+    <pre id="out"></pre>
   </div>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbzM34gA9ak--23-J1lgAEaczriCznPVBw68SPY0gD98UqsPYoeLBQxP5MTz4eCQiIa8/exec";
+/************ НАСТРОЙКИ ************/
+const API =
+  "https://script.google.com/macros/s/AKfycbzM34gA9ak--23-J1lgAEaczriCznPVBw68SPY0gD98UqsPYoeLBQxP5MTz4eCQiIa8/exec";
 
+/************ USER ID ************/
 let userId = localStorage.getItem("userId");
 if (!userId) {
   userId = crypto.randomUUID();
   localStorage.setItem("userId", userId);
 }
 
+/************ ELEMENTS ************/
+const hello = document.getElementById("hello");
 const out = document.getElementById("out");
+const adminBtn = document.getElementById("adminBtn");
+
+/************ INIT ************/
+initUser();
 
 async function initUser() {
   const res = await fetch(`${API}?action=getUser&userId=${userId}`);
   const data = await res.json();
 
   if (data.user) {
-    out.textContent = `Привет, ${data.user.name} (${data.user.role})`;
+    hello.textContent = `Привет, ${data.user.name} (${data.user.role})`;
+
+    if (data.user.role === "admin") {
+      adminBtn.style.display = "block";
+    }
   } else {
-    askName();
+    createProfile();
   }
 }
 
-function askName() {
+/************ CREATE PROFILE ************/
+function createProfile() {
   const name = prompt("Введите ваше имя");
   if (!name) return;
 
   fetch(`${API}?action=createUser&userId=${userId}&name=${encodeURIComponent(name)}`)
     .then(r => r.json())
     .then(d => {
-      out.textContent = `Профиль создан: ${d.user.name}`;
+      hello.textContent = `Профиль создан: ${d.user.name}`;
     });
 }
 
-initUser();
+/************ ADMIN ************/
+adminBtn.onclick = async () => {
+  const res = await fetch(`${API}?action=listUsers&userId=${userId}`);
+  const data = await res.json();
+  out.textContent = JSON.stringify(data, null, 2);
+};
 </script>
-
-
-
 </body>
 </html>
